@@ -8,9 +8,7 @@ from dotenv import load_dotenv
 base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../'))
 
 dotenv_path = os.path.join(base_dir, '.env')
-print(dotenv_path)
 load_dotenv(dotenv_path)
-
 from db.db import get_session, engine
 from db.model import HousePredArima
 import utils

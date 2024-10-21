@@ -1,9 +1,23 @@
 services:
   arima_worker:
-    image: ml_worker:v1
+    image: ml_worker:v2
     container_name: arima_worker
     networks:
      - stormsmarthome_storm_network
+
+  xgboost_worker:
+    image: ml_worker:v2
+    container_name: xgboost_worker
+    command: python worker/xgboost_model.py
+    networks:
+     - stormsmarthome_storm_network
+
+  # neuralprophet_worker:
+  #   image: ml_worker:v2
+  #   container_name: neuralprophet_worker
+  #   command: python worker/neuralprophet_model.py
+  #   networks:
+  #    - stormsmarthome_storm_network
 networks:
   stormsmarthome_storm_network:
     external: true

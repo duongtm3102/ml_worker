@@ -9,9 +9,12 @@ class Base(DeclarativeBase):
     __abstract__ = True
     # metadata = MetaData()
 
+db_url = os.getenv('DB_URL')
+if not db_url:
+    db_url = "mysql+pymysql://root:Uet123@mysql/iotdata"
 
 engine = create_engine(
-    os.getenv('DB_URL'),
+    db_url,
     pool_size=30,
     max_overflow=10,
     pool_pre_ping=True,

@@ -47,7 +47,7 @@ def build_model(house_id, slice_gap):
     
     auto_arima = pmdarima.auto_arima(train_data, stepwise=True, seasonal=False)
    
-    model_dump = pickle.dumps(auto_arima)
+    model_dump = pickle.dumps(auto_arima, protocol=pickle.HIGHEST_PROTOCOL)
     model = utils.save_model(house_id=house_id, slice_gap=slice_gap, model_name="ARIMA", model_dump=model_dump, updated_at=updated_at)
     
     logger.info(
@@ -76,7 +76,7 @@ def update_observed_data_to_model(house_id, slice_gap, model):
             arima_model.update(df_new_data.iloc[i])
             # logger.debug(f"Update value {df_new_data.iloc[i]} to ARIMA Model of house {house_id}")
         
-        model_dump = pickle.dumps(arima_model)
+        model_dump = pickle.dumps(arima_model, protocol=pickle.HIGHEST_PROTOCOL)
         model = utils.save_model(house_id, slice_gap, "ARIMA", model_dump, updated_at)
         
         return model

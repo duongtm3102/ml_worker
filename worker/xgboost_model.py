@@ -71,7 +71,7 @@ def build_model(house_id, slice_gap):
             eval_set=[(X_train, y_train),],
             verbose=100)
     
-    model_dump = pickle.dumps(reg)
+    model_dump = pickle.dumps(reg, protocol=pickle.HIGHEST_PROTOCOL)
     utils.save_model(house_id=house_id, slice_gap=slice_gap, model_name="XGBoost", model_dump=model_dump, updated_at=updated_at)
     
     logger.info(
@@ -82,6 +82,10 @@ def build_model(house_id, slice_gap):
     
 def forecast_house_data(house_id, slice_gap):
     try:
+        if utils.check_skip_forecast(house_id, slice_gap, "XGBoost"):
+            logger.info(f"--- No new house data, skip forecast for house {house_id} using XGBoost Model.")
+            return
+        
         model = utils.get_model(house_id, "XGBoost", slice_gap)
         model_dump = None
         if model:
@@ -175,11 +179,10 @@ def retrain_models():
     
 
 def main():
-    
-    # run_forecast()
+    run_forecast()
     scheduler = BackgroundScheduler()
     scheduler.add_job(run_forecast, 'interval', minutes=1, coalesce=True, max_instances=1)
-    scheduler.add_job(retrain_models, 'interval', minutes=20, coalesce=True, max_instances=1)
+    scheduler.add_job(retrain_models, 'interval', minutes=30, coalesce=True, max_instances=1)
 
     scheduler.start()
     logger.info('<=========== Scheduler Started ===========>')

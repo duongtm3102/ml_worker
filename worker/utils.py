@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import datetime
 from db.db import get_session
-from db.model import PredictModel, HouseData, HousePredArima, HousePredXGBoost
+from db.model import PredictModel, HouseData, HousePredArima, HousePredXGBoost, HousePredNeuralProphet
 import constants as const
 
 logger = logging.getLogger(__name__)
@@ -101,8 +101,22 @@ def get_recent_house_data(house_id, slice_gap, lags):
         axis=1
     )
     house_data_df.sort_values(by='start_time', inplace=True)
-    # Return the DataFrame with calculated reg_date
-    return house_data_df
+    house_data_df.reset_index(drop=True, inplace=True)
+    
+    house_data_df['start_time'] = pd.to_datetime(house_data_df['start_time'])
+    min_date = house_data_df['start_time'].min()
+    max_date = house_data_df['start_time'].max()
+
+    complete_time_range = pd.date_range(start=min_date, end=max_date, freq=const.SLICE_GAP_TO_MIN[slice_gap])
+
+    time_df = pd.DataFrame(complete_time_range, columns=['start_time'])
+
+    filled_house_data_df = pd.merge(time_df, house_data_df, on='start_time', how='left')
+
+    # Fill missing avg values with 0
+    filled_house_data_df.fillna({'avg': 0}, inplace=True)
+    
+    return filled_house_data_df
 
 
 def slice_index_to_datetime(year, month, day, slice_index, slice_gap):
@@ -135,6 +149,8 @@ def check_skip_forecast(house_id, slice_gap, model_name):
         houseForecast = HousePredArima
     elif model_name == "XGBoost":
         houseForecast = HousePredXGBoost
+    elif model_name == "NeuralProphet":
+        houseForecast = HousePredNeuralProphet
     else:
         logger.error("Error while checking skip forecast: Invalid Model Name")
         return False

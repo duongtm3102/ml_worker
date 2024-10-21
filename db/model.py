@@ -10,7 +10,7 @@ class HouseData(Base):
 
     house_id: Mapped[int] = mapped_column(Integer, primary_key=True)
     reg_date: Mapped[datetime.datetime] = mapped_column(DateTime, primary_key=True)
-    slice_gap: Mapped[int] = mapped_column(Integer)
+    slice_gap: Mapped[int] = mapped_column(Integer, primary_key=True)
     slice_index: Mapped[int] = mapped_column(Integer)
     year: Mapped[int] = mapped_column(Integer)
     month: Mapped[int] = mapped_column(Integer)
@@ -19,24 +19,24 @@ class HouseData(Base):
 
 
 class HousePredArima(Base):
-    __tablename__ = 'house_pred_arima'
+    __tablename__ = 'house_data_forecast_arima'
 
     house_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    reg_date: Mapped[datetime.datetime] = mapped_column(DateTime, primary_key=True)
-    slice_gap: Mapped[int] = mapped_column(Integer)
-    slice_index: Mapped[int] = mapped_column(Integer)
-    year: Mapped[int] = mapped_column(Integer)
-    month: Mapped[int] = mapped_column(Integer)
-    day: Mapped[int] = mapped_column(Integer)
+    reg_date: Mapped[datetime.datetime] = mapped_column(DateTime)
+    slice_gap: Mapped[int] = mapped_column(Integer, primary_key=True)
+    slice_index: Mapped[int] = mapped_column(Integer, primary_key=True)
+    year: Mapped[int] = mapped_column(Integer, primary_key=True)
+    month: Mapped[int] = mapped_column(Integer, primary_key=True)
+    day: Mapped[int] = mapped_column(Integer, primary_key=True)
     avg: Mapped[Optional[float]] = mapped_column(Float)
 
 
 class HousePredNeuralProphet(Base):
-    __tablename__ = 'house_pred_neuralprophet'
+    __tablename__ = 'house_data_forecast_neuralprophet'
 
     house_id: Mapped[int] = mapped_column(Integer, primary_key=True)
     reg_date: Mapped[datetime.datetime] = mapped_column(DateTime, primary_key=True)
-    slice_gap: Mapped[int] = mapped_column(Integer)
+    slice_gap: Mapped[int] = mapped_column(Integer, primary_key=True)
     slice_index: Mapped[int] = mapped_column(Integer)
     year: Mapped[int] = mapped_column(Integer)
     month: Mapped[int] = mapped_column(Integer)
@@ -45,15 +45,15 @@ class HousePredNeuralProphet(Base):
 
 
 class HousePredXGBoost(Base):
-    __tablename__ = 'house_pred_xgboost'
+    __tablename__ = 'house_data_forecast_xgboost'
 
     house_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    reg_date: Mapped[datetime.datetime] = mapped_column(DateTime, primary_key=True)
-    slice_gap: Mapped[int] = mapped_column(Integer)
-    slice_index: Mapped[int] = mapped_column(Integer)
-    year: Mapped[int] = mapped_column(Integer)
-    month: Mapped[int] = mapped_column(Integer)
-    day: Mapped[int] = mapped_column(Integer)
+    reg_date: Mapped[datetime.datetime] = mapped_column(DateTime)
+    slice_gap: Mapped[int] = mapped_column(Integer, primary_key=True)
+    slice_index: Mapped[int] = mapped_column(Integer, primary_key=True)
+    year: Mapped[int] = mapped_column(Integer, primary_key=True)
+    month: Mapped[int] = mapped_column(Integer, primary_key=True)
+    day: Mapped[int] = mapped_column(Integer, primary_key=True)
     avg: Mapped[Optional[float]] = mapped_column(Float)
 
 

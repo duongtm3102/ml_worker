@@ -11,8 +11,7 @@ class Base(DeclarativeBase):
 
 
 engine = create_engine(
-    #os.getenv('DB_URL'),
-    "mysql+pymysql://root:Uet123@127.0.0.1/iotdata",
+    os.getenv('DB_URL'),
     pool_size=30,
     max_overflow=10,
     pool_pre_ping=True,

@@ -1,0 +1,11 @@
+services:
+  arima_worker:
+    image: ml_worker:v1
+    container_name: arima_worker
+    networks:
+     - stormsmarthome_storm_network
+networks:
+  stormsmarthome_storm_network:
+    external: true
+    
+    

@@ -19,16 +19,19 @@ from concurrent.futures import ProcessPoolExecutor, wait
 import time
 
 
-file_handler = logging.FileHandler("arima.log")
-file_handler.setLevel(logging.DEBUG)
+log_file_handler = logging.FileHandler("arima.log")
+log_file_handler.setLevel(logging.DEBUG)
 
 stream_handler = logging.StreamHandler()
 stream_handler.setLevel(logging.INFO)
 
+error_file_handler = logging.FileHandler("arima.log.error")
+error_file_handler.setLevel(logging.ERROR)
+
 logging.basicConfig(
     level=logging.DEBUG,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[file_handler, stream_handler]
+    handlers=[log_file_handler, stream_handler, error_file_handler]
 )
 
 logger = logging.getLogger(__name__)

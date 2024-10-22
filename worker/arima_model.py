@@ -62,7 +62,7 @@ def update_observed_data_to_model(house_id, slice_gap, model):
         if df_new_data.empty:
             logger.debug(f"Observed data of ARIMA Model of house {house_id} is up to date.")
             return model
-        
+    
         updated_at = df_new_data.iloc[-1]['start_time']
         df_new_data.index = df_new_data['start_time']
         df_new_data.drop(['slice_index', 'start_time', 'year', 'month', 'day'], axis=1, inplace=True)
@@ -70,7 +70,7 @@ def update_observed_data_to_model(house_id, slice_gap, model):
         arima_model = pickle.loads(model.model)
         
         for i in range(df_new_data.shape[0]):
-            print(df_new_data.iloc[i])
+            # print(df_new_data.iloc[i])
             arima_model.update(df_new_data.iloc[i])
             # logger.debug(f"Update value {df_new_data.iloc[i]} to ARIMA Model of house {house_id}")
         
@@ -95,14 +95,17 @@ def forecast_house_data(house_id, slice_gap):
             model_dump = build_model(house_id, slice_gap)
             
         arima = pickle.loads(model_dump.model)
-        next_index = model_dump.updated_at + timedelta(minutes=5)
+        next_index = model_dump.updated_at + timedelta(minutes=2*slice_gap)
         
         start_time = time.time()
         
-        forecast = arima.predict(n_periods=1)
-        avg_forecast = max(forecast[0], 0)
-        print(f"ARIMA FORECAST {avg_forecast}")
+        forecast = arima.predict(n_periods=2)
+        avg_forecast_0 = max(forecast[0], 0)
+        avg_forecast = max(forecast[1], 0)
+        # print(f"ARIMA FORECAST {avg_forecast}")
+        
         year, month, day, slice_index = utils.datetime_to_slice_index(next_index, slice_gap=slice_gap)
+        
         with get_session() as db:
             house_pred = HousePredArima(
                             house_id=house_id,

@@ -1,9 +1,9 @@
 import os
+import io
 import logging
 import pandas as pd
-import pickle
 from neuralprophet import NeuralProphet
-
+import torch
 from dotenv import load_dotenv
 
 base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../'))
@@ -35,8 +35,6 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-## max_allowed_packet=104857600 to [mysqld] in /etc/my.cnf
-##
 def build_model(house_id, slice_gap):
     train_data = utils.get_house_train_data(house_id=house_id, slice_gap=slice_gap)
     updated_at = train_data.iloc[-1]['start_time']
@@ -51,10 +49,12 @@ def build_model(house_id, slice_gap):
     n_lags = const.NEURAL_PROPHET_N_LAGS
     m = NeuralProphet(n_lags=n_lags)
     metrics = m.fit(df=df_train, freq=const.SLICE_GAP_TO_MIN[5])
-    with open(f'neuralprophet_{house_id}.pkl', 'wb') as handle:
-        pickle.dump(m, handle, protocol=pickle.HIGHEST_PROTOCOL)
-    # model_dump = pickle.dumps(m)
-    utils.save_model(house_id=house_id, slice_gap=slice_gap, model_name="NeuralProphet", model_dump=0, updated_at=updated_at)
+    
+    buffer = io.BytesIO()
+    torch.save(m, buffer)
+    buffer.seek(0)
+    
+    utils.save_model(house_id=house_id, slice_gap=slice_gap, model_name="NeuralProphet", model_dump=buffer.read(), updated_at=updated_at)
     
     logger.info(
         f'---NeuralProphet model for house: {house_id} trained and saved. Time taken: {time.time() - start_time}---'
@@ -71,15 +71,11 @@ def forecast_house_data(house_id, slice_gap):
         model = utils.get_model(house_id, "NeuralProphet", slice_gap)
         m = None
         if model:
-            model_save_path = f"neuralprophet_{house_id}.pkl"
-            if os.path.exists(model_save_path):
-                with open(model_save_path, 'rb') as handle:
-                    m = pickle.load(handle)
-                    
-            else:
-                logger.warning(f"NeuralProphet model save file for house {house_id} not found.")
-                m = build_model(house_id, slice_gap)
-                
+            model_dump = model.model
+            buffer = io.BytesIO(model_dump)
+            buffer.seek(0)
+            
+            m = torch.load(buffer, map_location='cpu')
         else:
             m = build_model(house_id, slice_gap)
         
@@ -91,7 +87,14 @@ def forecast_house_data(house_id, slice_gap):
         df_train = df_train.rename(columns={'start_time':'ds',
                                     'avg':'y'})
         
-        future = m.make_future_dataframe(df_train)
+        last_row = df_train.iloc[-1]
+        new_row = pd.DataFrame({
+            'ds': [last_row['ds'] + pd.Timedelta(minutes=slice_gap)],
+            'y': [last_row['y']]
+        })
+        df_train = pd.concat([df_train, new_row], ignore_index=True)
+        
+        future = m.make_future_dataframe(df_train, periods=2)
         next_index = future.iloc[-1]['ds']
         
         start_time = time.time()
@@ -99,6 +102,8 @@ def forecast_house_data(house_id, slice_gap):
         avg_forecast = max(forecast.iloc[-1]['yhat1'], 0)
         
         year, month, day, slice_index = utils.datetime_to_slice_index(next_index, slice_gap=slice_gap)
+        # print(f"AVG: {avg_forecast} - index: {slice_index}")
+        # return
         with get_session() as db:
             house_pred = HousePredNeuralProphet(
                             house_id=house_id,
@@ -127,13 +132,12 @@ def retrain_model(house_id, slice_gap):
             return
         
         last_data_datetime = last_data.iloc[-1]['start_time']
-    
-        model = utils.get_model(house_id=house_id, model_name="NeuralProphet", slice_gap=slice_gap)
+        
+        model = utils.get_model(house_id, "NeuralProphet", slice_gap)
         if not model:
             logger.info(f"NeuralProphet model for house {house_id} is not exist, skip retrain model")
             return
         model_updated_at = model.updated_at
-        
         if last_data_datetime - model_updated_at >= timedelta(hours=1):
             build_model(house_id=house_id, slice_gap=slice_gap)
         else:

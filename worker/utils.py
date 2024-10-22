@@ -48,7 +48,7 @@ def get_house_train_data(house_id, slice_gap):
                     ).all()
     
     if not house_data:
-        # LOG
+        logger.warning(f"House {house_id} data is empty.")
         return None
     
     house_data_df = pd.DataFrame(house_data, columns=["avg", "year", "month", "day", "slice_index"])
@@ -73,8 +73,9 @@ def get_house_train_data(house_id, slice_gap):
 
     # Fill missing avg values with 0
     filled_house_data_df.fillna({'avg': 0}, inplace=True)
-
-    return filled_house_data_df
+    
+    # Not use last data because it is not completely calculated.
+    return filled_house_data_df.drop(filled_house_data_df.index[-1])
     
     
 def get_recent_house_data(house_id, slice_gap, lags):
@@ -87,7 +88,7 @@ def get_recent_house_data(house_id, slice_gap, lags):
             HouseData.slice_gap == slice_gap
         ).order_by(
             HouseData.year.desc(), HouseData.month.desc(), HouseData.day.desc(), HouseData.slice_index.desc()
-        ).limit(lags).all()
+        ).limit(lags + 1).all()
     if not house_data:
         logger.error(f"Can not get recent data of house {house_id}.")
         return None
@@ -115,8 +116,8 @@ def get_recent_house_data(house_id, slice_gap, lags):
 
     # Fill missing avg values with 0
     filled_house_data_df.fillna({'avg': 0}, inplace=True)
-    
-    return filled_house_data_df
+    # Not use last data because it is not completely calculated.
+    return filled_house_data_df.drop(filled_house_data_df.index[-1])
 
 
 def slice_index_to_datetime(year, month, day, slice_index, slice_gap):

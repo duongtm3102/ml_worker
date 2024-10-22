@@ -166,3 +166,5 @@ lightning_logs/
 *.csv
 *.pickle
 *.cnf
+*.torch
+*.pkl 

@@ -36,7 +36,7 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-FEATURES = ['minute', 'hour', 'day', 'lag1', 'lag2']
+FEATURES = ['minute', 'hour', 'day', 'lag2', 'lag3']
 TARGET = 'avg'
 
 def create_features(df):
@@ -44,8 +44,8 @@ def create_features(df):
     df['minute'] = df.index.minute
     df['hour'] = df.index.hour
     df['day'] = df.index.day
-    df['lag1'] = df['avg'].shift(1)
-    df['lag2'] = df['avg'].shift(2)
+    df['lag2'] = df['avg'].shift(1)
+    df['lag3'] = df['avg'].shift(2)
     return df
 
 def build_model(house_id, slice_gap):
@@ -70,7 +70,6 @@ def build_model(house_id, slice_gap):
     reg.fit(X_train, y_train,
             eval_set=[(X_train, y_train),],
             verbose=100)
-    
     model_dump = pickle.dumps(reg, protocol=pickle.HIGHEST_PROTOCOL)
     utils.save_model(house_id=house_id, slice_gap=slice_gap, model_name="XGBoost", model_dump=model_dump, updated_at=updated_at)
     
@@ -101,7 +100,7 @@ def forecast_house_data(house_id, slice_gap):
         
         
         df_to_predict = recent_data
-        next_index = df_to_predict.index[-1] + pd.Timedelta(minutes=5)
+        next_index = df_to_predict.index[-1] + pd.Timedelta(minutes=2*slice_gap)
         df_to_predict = pd.concat([df_to_predict, pd.DataFrame(index=[next_index])])
         df_to_predict = create_features(df_to_predict)
         
@@ -111,6 +110,7 @@ def forecast_house_data(house_id, slice_gap):
         
         avg_forecast = max(forecast[0], 0)
         year, month, day, slice_index = utils.datetime_to_slice_index(next_index, slice_gap=slice_gap)
+        
         with get_session() as db:
             house_pred = HousePredXGBoost(
                             house_id=house_id,

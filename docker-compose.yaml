@@ -6,6 +6,15 @@ services:
       DB_URL: "mysql+pymysql://root:Uet123@mysql/iotdata"
     networks:
      - stormsmarthome_storm_network
+    restart: always
+    labels:
+        autoheal: True
+    healthcheck:
+      test: "python worker/healthcheck.py ARIMA 5"
+      interval: 60s
+      timeout: 60s
+      retries: 5
+      start_period: 600s
 
   xgboost_worker:
     image: ml_worker:v2
@@ -15,7 +24,15 @@ services:
       DB_URL: "mysql+pymysql://root:Uet123@mysql/iotdata"
     networks:
      - stormsmarthome_storm_network
-
+    restart: always
+    labels:
+        autoheal: True
+    healthcheck:
+      test: "python worker/healthcheck.py XGBoost 5"
+      interval: 60s
+      timeout: 60s
+      retries: 5
+      start_period: 600s
   neuralprophet_worker:
     image: ml_worker:v2
     container_name: neuralprophet_worker
@@ -24,6 +41,23 @@ services:
       DB_URL: "mysql+pymysql://root:Uet123@mysql/iotdata"
     networks:
      - stormsmarthome_storm_network
+    restart: always
+    labels:
+        autoheal: True
+    healthcheck:
+      test: "python worker/healthcheck.py NeuralProphet 5"
+      interval: 60s
+      timeout: 60s
+      retries: 5
+      start_period: 600s
+  
+  autoheal:
+    restart: always
+    image: willfarrell/autoheal
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=autoheal
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
 networks:
   stormsmarthome_storm_network:
     external: true

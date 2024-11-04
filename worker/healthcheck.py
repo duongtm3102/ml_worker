@@ -4,7 +4,7 @@ from db.db import get_session
 from db.model import HouseData, HousePredArima, HousePredXGBoost, HousePredNeuralProphet
 from worker import utils, constants
 
-def check_recent_forecast(house_id, slice_gap, model_name):
+def check_delayed_forecast(house_id, slice_gap, model_name):
     if model_name == "ARIMA":
         houseForecast = HousePredArima
     elif model_name == "XGBoost":
@@ -42,7 +42,7 @@ def check_recent_forecast(house_id, slice_gap, model_name):
     last_forecast_datetime = utils.slice_index_to_datetime(house_forecast.year, house_forecast.month, house_forecast.day, house_forecast.slice_index,
                                                  slice_gap)
     
-    return last_forecast_datetime - last_data_datetime <= datetime.timedelta(minutes=slice_gap)
+    return last_data_datetime - last_forecast_datetime > datetime.timedelta(minutes=slice_gap)
 
 
 
@@ -57,7 +57,7 @@ def main():
         print(f"Model: {model_name}, slice_gap: {slice_gap}")
         
         for house_id in constants.HOUSE_IDS_TO_FORECAST:
-            if not check_recent_forecast(house_id, slice_gap, model_name):
+            if check_delayed_forecast(house_id, slice_gap, model_name):
                 print(f"Forecast Worker for house {house_id} using model {model_name} may be error.")
                 sys.exit(1)
         print("OK")

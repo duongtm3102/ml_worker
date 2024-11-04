@@ -1,9 +1,13 @@
 services:
   arima_worker:
-    image: ml_worker:v2
+    image: duongtm3102/ml_worker:v3
     container_name: arima_worker
     environment:
       DB_URL: "mysql+pymysql://root:Uet123@mysql/iotdata"
+      HOUSE_IDS_TO_FORECAST: 0,5,20
+      SLICE_GAP: 5
+      FORECAST_INTERVAL: 1
+      RETRAIN_INTERVAL: 30
     networks:
      - stormsmarthome_storm_network
     restart: always
@@ -17,11 +21,15 @@ services:
       start_period: 600s
 
   xgboost_worker:
-    image: ml_worker:v2
+    image: duongtm3102/ml_worker:v3
     container_name: xgboost_worker
     command: python worker/xgboost_model.py
     environment:
       DB_URL: "mysql+pymysql://root:Uet123@mysql/iotdata"
+      HOUSE_IDS_TO_FORECAST: 0,5,20
+      SLICE_GAP: 5
+      FORECAST_INTERVAL: 1
+      RETRAIN_INTERVAL: 30
     networks:
      - stormsmarthome_storm_network
     restart: always
@@ -34,11 +42,15 @@ services:
       retries: 5
       start_period: 600s
   neuralprophet_worker:
-    image: ml_worker:v2
+    image: duongtm3102/ml_worker:v2.5
     container_name: neuralprophet_worker
     command: python worker/neuralprophet_model.py
     environment:
       DB_URL: "mysql+pymysql://root:Uet123@mysql/iotdata"
+      HOUSE_IDS_TO_FORECAST: 0,5,20
+      SLICE_GAP: 5
+      FORECAST_INTERVAL: 1
+      RETRAIN_INTERVAL: 30
     networks:
      - stormsmarthome_storm_network
     restart: always

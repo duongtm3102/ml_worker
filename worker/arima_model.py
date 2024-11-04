@@ -161,7 +161,7 @@ def run_forecast():
     logger.info('--- Forecast Houses Data Process started ---')
 
     with ProcessPoolExecutor(max_workers=4, initializer=initialize_engine) as executor:
-        futures = [executor.submit(forecast_house_data, house_id, 5) for house_id in const.HOUSE_IDS_TO_FORECAST]
+        futures = [executor.submit(forecast_house_data, house_id, const.SLICE_GAP) for house_id in const.HOUSE_IDS_TO_FORECAST]
         wait(futures)
 
     logger.info('--- Forecast House Data Process ended ---')
@@ -170,7 +170,7 @@ def retrain_models():
     logger.info('--- Retrain Models Process started ---')
 
     with ProcessPoolExecutor(max_workers=4, initializer=initialize_engine) as executor:
-        futures = [executor.submit(retrain_model, house_id, 5) for house_id in const.HOUSE_IDS_TO_FORECAST]
+        futures = [executor.submit(retrain_model, house_id, const.SLICE_GAP) for house_id in const.HOUSE_IDS_TO_FORECAST]
         wait(futures)
 
     logger.info('--- Retrain Models Process ended ---')
@@ -179,7 +179,7 @@ def retrain_models():
 def main():
     run_forecast()
     scheduler = BackgroundScheduler()
-    scheduler.add_job(run_forecast, 'interval', minutes=1, coalesce=True, max_instances=1)
+    scheduler.add_job(run_forecast, 'interval', minutes=const.FORECAST_INTERVAL, coalesce=True, max_instances=1)
     # scheduler.add_job(retrain_models, 'interval', minutes=30, coalesce=True, max_instances=1)
 
     scheduler.start()

@@ -19,22 +19,25 @@ def get_model(house_id, model_name, slice_gap):
                     PredictModel.slice_gap==slice_gap
                 ).first()
 
-        if not model:
-            # LOG
-            return None
-        
-        return model
+    if not model:
+        logger.warning(f"Not found model for House_id: {house_id} - Model: {model_name}!")
+        return None
+    
+    return model
         
 
 def save_model(house_id, slice_gap, model_name, model_dump, updated_at):
     with get_session() as db:
         new_model = PredictModel(house_id=house_id, slice_gap=slice_gap, model_name=model_name, model=model_dump, updated_at=updated_at)
         model = db.merge(new_model)
-        db.commit()
+        # db.commit()
+    
+    if not model:
+        logger.error(f"Error saving model for House_id: {house_id} - Model: {model_name}!")
+        return None
+    logger.info(f"Model saved - House_id: {house_id} - Model: {model_name}")
         
-        logger.info(f"Model saved - House_id: {house_id} - Model: {model_name}")
-        
-        return model
+    return model
     
     
 def get_house_train_data(house_id, slice_gap):

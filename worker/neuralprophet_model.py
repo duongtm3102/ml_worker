@@ -119,7 +119,7 @@ def forecast_house_data(house_id, slice_gap):
                             avg=avg_forecast
                         )
             db.merge(house_pred)
-            db.commit()
+            # db.commit()
             logger.info(
                 f'---House data forecasted and saved to DB for house: {house_id}. Time taken: {time.time() - start_time}---'
             )
